@@ -40,7 +40,6 @@ gradle-app.setting
 out/
 workspace.xml
 .idea_modules/
-*.iml
 *.ipr
 *.iws
 
