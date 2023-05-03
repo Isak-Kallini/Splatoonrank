@@ -1,37 +1,25 @@
-import isak.Team;
-import jakarta.persistence.*;
+package isak;
+
 import org.json.JSONObject;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
 public class Match implements Comparable<Match>{
-    @Id
-    @Column(name = "id")
     private Integer id;
-    @ManyToOne
-    @JoinColumn(name = "top_id", referencedColumnName = "id")
     private Team top;
-    @Column(name = "topScore")
     private Integer topScore;
-    @Column(name = "topelo")
     private Integer topElo;
-
-    @ManyToOne
-    @JoinColumn(name = "bot_id", referencedColumnName = "id")
     private Team bot;
-    @Column(name = "botScore")
     private Integer botScore;
-    @Column(name = "botelo")
     private Integer botElo;
-    @Basic
-    @Temporal(TemporalType.TIMESTAMP)
     private Calendar date;
+
     public Match(JSONObject json){
         System.out.println("match: " + json.getString("_id"));
-        //top = new Team(json.getJSONObject("top"));
+        top = new Team(json.getJSONObject("top"));
         topScore = json.getJSONObject("top").getInt("score");
-        //bot = new Team(json.getJSONObject("bottom"));
+        bot = new Team(json.getJSONObject("bottom"));
         botScore = json.getJSONObject("bottom").getInt("score");
 
         String completed = json.getString("completedAt");
@@ -42,6 +30,17 @@ public class Match implements Comparable<Match>{
         date.set(Calendar.HOUR_OF_DAY, Integer.parseInt(completed.substring(11, 13)));
         date.set(Calendar.MINUTE, Integer.parseInt(completed.substring(14,16)));
         date.set(Calendar.SECOND, Integer.parseInt(completed.substring(17, 19)));
+    }
+
+    public MatchData getData(){
+        MatchData data = new MatchData();
+        data.setBot(getBot().getData());
+        data.setBotElo(getBotElo());
+        data.setBotScore(getBotScore());
+        data.setTop(getTop().getData());
+        data.setTopElo(getTopElo());
+        data.setTopScore(getTopScore());
+        return data;
     }
 
     public String toString(){

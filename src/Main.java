@@ -1,4 +1,5 @@
-import isak.Team;
+import isak.Match;
+import isak.TeamData;
 import org.apache.commons.io.IOUtils;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -26,47 +27,47 @@ public class Main {
         SessionFactory factory = meta.getSessionFactoryBuilder().build();
 
         String IPLid = "5c6dbd2da605be0329ecf36a";
-        /*List<Tournament> tournaments = new ArrayList<>();// = getTournamentIds(IPLid);
-        tournaments.add(new Tournament("6422e78c31ff8e2d9a497927"));*/
+        List<Tournament> tournaments = new ArrayList<>();// = getTournamentIds(IPLid);
+        tournaments.add(new Tournament("6422e78c31ff8e2d9a497927"));
         List<Match> matches = new ArrayList<>();
-        Team top = new Team();
-        top.setBattlefyId("3");
-        top.setName("två");
-        top.setElo(17);
-        //tournaments.forEach(t -> matches.addAll(t.getMatches()));
+        tournaments.forEach(t -> matches.addAll(t.getMatches()));
         matches.sort(Comparator.naturalOrder());
         matches.forEach(m -> System.out.println(m.toString()));
 
-        Session session = factory.openSession();
+        /*Session session = factory.openSession();
         Transaction t = session.beginTransaction();
         if(!exists(top, session)) {
             session.save(top);
         }
         t.commit();
-        session.close();
+        session.close();*/
 
-        /*for(Match m: matches) {
+        for(isak.Match m: matches) {
             Session session = factory.openSession();
             Transaction t = session.beginTransaction();
-            isak.Team top = m.getTop();
+            isak.MatchData matchData = m.getData();
+            isak.TeamData top = m.getTop().getData();
             if(exists(top, session)){
-
+                Query q = session.createQuery("from isak.TeamData t where t.battlefy_id = :key");
+                q.setParameter("key", top.getBattlefy_id());
+                matchData.setTop(q.getResultStream().
             }else{
                 session.save(top);
             }
-            isak.Team bot = m.getBot();
+            isak.TeamData bot = m.getBot().getData();
             if(exists(bot, session)){
 
             }else{
                 session.save(bot);
             }
+            session.save(matchData);
             t.commit();
-        }*/
+        }
     }
 
-    public static boolean exists(Team t, Session s){
+    public static boolean exists(TeamData t, Session s){
         Query query = s.
-                createQuery("select 1 from isak.Team t where t.battlefy_id = :key");
+                createQuery("select 1 from isak.TeamData t where t.battlefy_id = :key");
         query.setParameter("key", t.getBattlefy_id());
         return query.uniqueResult() != null;
     }
@@ -80,7 +81,7 @@ public class Main {
         List<Tournament> tournaments = new ArrayList<>();
 
         for(int i = 1; i <= 1 + 1/* nTournaments/20 */; i++){
-            url = new URL(startUrl + "/past?page=" + i + "&size=1");
+            url = new URL(startUrl + "/past?page=" + i + "&size=20");
             if(i != 1){
                 json = IOUtils.toString(url, Charset.forName("UTF-8"));
                 ob = new JSONObject(json);

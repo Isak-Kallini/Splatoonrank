@@ -8,10 +8,10 @@
         <property name="dialect">org.hibernate.dialect.MySQLDialect</property>
         <property name="connection.url">jdbc:mysql://localhost/splatoonrank</property>
         <property name="connection.username">splatoonrank</property>
-        <property name="connection.password">password</property>
+        <property name="connection.password">Password</property>
         <property name="connection.driver_class">com.mysql.cj.jdbc.Driver</property>
 
-        <mapping class="isak.Team"/>
-        <mapping class="Match"/>
+        <mapping class="isak.TeamData"/>
+        <mapping class="isak.MatchData"/>
     </session-factory>
 </hibernate-configuration>

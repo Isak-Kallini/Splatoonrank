@@ -1,29 +1,27 @@
 package isak;
 
 import jakarta.persistence.*;
-import org.json.JSONObject;
 
-public class Team {
+@Entity
+@Table(name = "teams")
+public class TeamData {
+    @Column(name = "name")
     private String name;
-    private JSONObject json;
+    //private JSONObject json;
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Integer id;
+    @Column(name = "battlefy_id")
     private String battlefy_id;
+    @Column(name = "elo")
+    private Integer elo;
 
-    private Integer elo = 0;
-
-    public Team(JSONObject o){
+    public TeamData(){}
+    /*public Team(JSONObject o){
         json = o;
         setName(json.getJSONObject("team").getString("name"));
         setBattlefyId(json.getJSONObject("team").getString("_id"));
-    }
-
-    public TeamData getData(){
-        TeamData data = new TeamData();
-        data.setBattlefyId(battlefy_id);
-        data.setElo(elo);
-        data.setName(name);
-        return data;
-    }
+    }*/
 
     public String getName() {
         return name;
@@ -49,4 +47,3 @@ public class Team {
         this.elo = elo;
     }
 }
-

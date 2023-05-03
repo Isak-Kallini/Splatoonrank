@@ -1,3 +1,4 @@
+import isak.Match;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -22,6 +23,7 @@ public class Tournament {
         for(Object o: stageArray){
             stageids.add((String) o);
         }
+
         System.out.println("tournament: " + id);
         for(String s: stageids){
             URL url = new URL("https://dtmwra1jsgyb0.cloudfront.net/stages/" + s + "/matches");
