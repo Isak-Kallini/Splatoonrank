@@ -12,6 +12,11 @@ import java.util.List;
 public class Tournament {
     private URL url;
     private String id;
+
+    public JSONObject getJson() {
+        return json;
+    }
+
     private JSONObject json;
     private List<String> stageids = new ArrayList<>();
     private List<Match> matches = new ArrayList<>();
@@ -34,7 +39,10 @@ public class Tournament {
                         jo.getJSONObject("top").has("team") && jo.getJSONObject("top").has("score") && jo.getJSONObject("top").has("winner") &&
                 jo.getJSONObject("bottom").has("team") && jo.getJSONObject("bottom").has("score") && jo.getJSONObject("bottom").has("winner")
                         && !jo.getBoolean("isBye") && (jo.getJSONObject("top").getBoolean("winner") || jo.getJSONObject("bottom").getBoolean("winner"))) {
-                    matches.add(new Match(jo));
+                    if(jo.getBoolean("isComplete") && Main.parseTime(jo.getString("completedAt")).compareTo(Main.getLastMatch()) > 0
+                    && jo.getJSONObject("top").getInt("score") >= 0 && jo.getJSONObject("bottom").getInt("score") >= 0) {
+                        matches.add(new Match(jo));
+                    }
                 }
             }
         }

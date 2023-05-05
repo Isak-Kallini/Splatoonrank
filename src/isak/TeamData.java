@@ -5,23 +5,17 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "teams")
 public class TeamData {
-    @Column(name = "name")
+    @Column(name = "name", length = 5000)
     private String name;
-    //private JSONObject json;
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Integer id;
-    @Column(name = "battlefy_id")
+    @Column(name = "battlefy_id", unique = true)
     private String battlefy_id;
     @Column(name = "elo")
     private Integer elo;
 
     public TeamData(){}
-    /*public Team(JSONObject o){
-        json = o;
-        setName(json.getJSONObject("team").getString("name"));
-        setBattlefyId(json.getJSONObject("team").getString("_id"));
-    }*/
 
     public String getName() {
         return name;

@@ -1,6 +1,7 @@
 package isak;
 
 import jakarta.persistence.*;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class Team {
@@ -9,12 +10,16 @@ public class Team {
     private Integer id;
     private String battlefy_id;
 
-    private Integer elo = 0;
+    private Integer elo = 1000;
 
     public Team(JSONObject o){
         json = o;
         setName(json.getJSONObject("team").getString("name"));
-        setBattlefyId(json.getJSONObject("team").getString("_id"));
+        try {
+            setBattlefyId(json.getJSONObject("team").getString("persistentTeamID"));
+        }catch (JSONException e){
+            setBattlefyId("invalid");
+        }
     }
 
     public TeamData getData(){

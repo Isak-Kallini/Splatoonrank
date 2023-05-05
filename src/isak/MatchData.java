@@ -29,6 +29,9 @@ public class MatchData{
     @Basic
     @Temporal(TemporalType.TIMESTAMP)
     private Calendar date;
+    @Column(name = "battlefy_id", unique = true)
+    private String battlefyId;
+
     public MatchData(){}
 
     public void setTop(TeamData top) {
@@ -77,5 +80,21 @@ public class MatchData{
 
     public Integer getBotElo() {
         return botElo;
+    }
+
+    public Calendar getDate() {
+        return date;
+    }
+
+    public void setDate(Calendar date) {
+        this.date = date;
+    }
+
+    public String getBattlefyId() {
+        return battlefyId;
+    }
+
+    public void setBattlefyId(String battlefyId) {
+        this.battlefyId = battlefyId;
     }
 }
