@@ -1,10 +1,8 @@
-package isak;
+package data;
 
 import jakarta.persistence.*;
-import org.json.JSONObject;
 
 import java.util.Calendar;
-import java.util.GregorianCalendar;
 
 @Entity
 @Table(name = "matches")

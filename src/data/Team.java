@@ -1,6 +1,5 @@
-package isak;
+package data;
 
-import jakarta.persistence.*;
 import org.json.JSONException;
 import org.json.JSONObject;
 

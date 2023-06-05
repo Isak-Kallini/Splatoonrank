@@ -1,4 +1,4 @@
-package isak;
+package data;
 
 import jakarta.persistence.*;
 
@@ -12,6 +12,7 @@ public class TeamData {
     private Integer id;
     @Column(name = "battlefy_id", unique = true)
     private String battlefy_id;
+
     @Column(name = "elo")
     private Integer elo;
 
@@ -39,5 +40,9 @@ public class TeamData {
 
     public void setElo(Integer elo) {
         this.elo = elo;
+    }
+
+    public Integer getId() {
+        return id;
     }
 }
