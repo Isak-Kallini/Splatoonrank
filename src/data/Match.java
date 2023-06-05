@@ -1,4 +1,4 @@
-package isak;
+package data;
 
 import org.json.JSONObject;
 
