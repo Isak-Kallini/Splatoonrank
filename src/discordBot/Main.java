@@ -42,6 +42,10 @@ public class Main {
                 Commands.slash("update", "Get new matches from battlefy")
         );
 
+        commands.addCommands(
+                Commands.slash("ranking", "get team ranking")
+        );
+
         commands.queue();
         try {
             jda.awaitReady();

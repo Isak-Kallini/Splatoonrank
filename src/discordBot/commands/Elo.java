@@ -25,21 +25,21 @@ public class Elo {
     public static void run(SlashCommandInteractionEvent event) {
         String name = event.getOption("team", null, OptionMapping::getAsString);
         Session s = Main.factory.openSession();
-        Query nameQuery = s.createQuery("from data.TeamData t where t.name like :name");
+        Query<TeamData> nameQuery = s.createQuery("from data.TeamData t where t.name like :name", TeamData.class);
         nameQuery.setParameter("name", "%" + name + "%");
-        Iterator<TeamData> nameIterator = (Iterator<TeamData>) nameQuery.stream().iterator();
+        Iterator<TeamData> nameIterator = nameQuery.stream().iterator();
         if(nameIterator.hasNext()) {
             TeamData team = nameIterator.next();
             System.out.println(team.getName());
-            Query query = s.
-                    createQuery("from data.MatchData t where t.top = :key");
+            Query<MatchData> query = s.
+                    createQuery("from data.MatchData t where t.top = :key", MatchData.class);
             query.setParameter("key", team);
-            List<MatchData> topres = (List<MatchData>) query.stream().toList();
+            List<MatchData> topres = query.stream().toList();
 
-            Query query2 = s.
-                    createQuery("from data.MatchData t where t.bot = :key");
+            Query<MatchData> query2 = s.
+                    createQuery("from data.MatchData t where t.bot = :key", MatchData.class);
             query2.setParameter("key", team);
-            List<MatchData> botres = (List<MatchData>) query2.stream().toList();
+            List<MatchData> botres = query2.stream().toList();
 
             TreeMap<Calendar, Integer> res = new TreeMap<>();
             for (MatchData m : topres) {
@@ -84,5 +84,6 @@ public class Elo {
         }else{
             event.reply("Team not found").queue();
         }
+        s.close();
     }
 }
