@@ -13,8 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-import static discordBot.commands.Update.getLastMatch;
-import static discordBot.commands.Update.parseTime;
+import static discordBot.Utils.getLastMatchTime;
+import static discordBot.Utils.parseTime;
 
 public class Tournament {
     private URL url;
@@ -46,7 +46,7 @@ public class Tournament {
                         jo.getJSONObject("top").has("team") && jo.getJSONObject("top").has("score") && jo.getJSONObject("top").has("winner") &&
                 jo.getJSONObject("bottom").has("team") && jo.getJSONObject("bottom").has("score") && jo.getJSONObject("bottom").has("winner")
                         && !jo.getBoolean("isBye") && (jo.getJSONObject("top").getBoolean("winner") || jo.getJSONObject("bottom").getBoolean("winner"))) {
-                    if(jo.getBoolean("isComplete") && parseTime(jo.getString("completedAt")).compareTo(getLastMatch()) > 0
+                    if(jo.getBoolean("isComplete") && parseTime(jo.getString("completedAt")).compareTo(getLastMatchTime()) > 0
                     && jo.getJSONObject("top").getInt("score") >= 0 && jo.getJSONObject("bottom").getInt("score") >= 0) {
                         matches.add(new Match(jo));
                     }

@@ -13,11 +13,13 @@ import org.hibernate.query.Query;
 
 import java.util.List;
 
-public class Ranking extends ListenerAdapter {
-    private static List<TeamData> list;
-    private static int current = 0;
-    private static int viewCount = 10;
-    public static void run(SlashCommandInteractionEvent event) {
+public class Ranking extends ListenerAdapter implements Command, SelectEmbed {
+    private List<TeamData> list;
+    private int current = 0;
+    private int viewCount = 10;
+    @Override
+    public void run(SlashCommandInteractionEvent event) {
+        current = 0;
         Session s = Main.factory.openSession();
         Query<TeamData> query = s.createQuery("from data.TeamData order by elo desc", TeamData.class);
         list = query.list();
@@ -27,19 +29,19 @@ public class Ranking extends ListenerAdapter {
                 .setFooter("Viewing 1 to " + (current + viewCount)  + " of " + list.size()).build();
 
         event.replyEmbeds(embed).addActionRow(
-                Button.primary("start", "start"),
-                Button.primary("previous", "previous"),
-                Button.primary("next", "next"),
-                Button.primary("end", "end")).queue();
+                Button.primary("ranking start", "start"),
+                Button.primary("ranking previous", "previous"),
+                Button.primary("ranking next", "next"),
+                Button.primary("ranking end", "end")).queue();
     }
 
-    public static void editViewMessage(ButtonInteractionEvent event, String desc){
+    public void editViewMessage(ButtonInteractionEvent event, String desc){
         event.editMessageEmbeds(new EmbedBuilder()
                 .setDescription(desc)
                 .setFooter("Viewing " + (current + 1) + " to " + (current + viewCount) + " of " + list.size()).build()).queue();
     }
 
-    private static String table(){
+    public String table(){
         List<TeamData> currentList = list.subList(current, current + viewCount);
         int nameMaxLength = 0;
         for(TeamData t: currentList){
@@ -55,34 +57,39 @@ public class Ranking extends ListenerAdapter {
         return result;
     }
 
-    public static String next(){
+    @Override
+    public void next(ButtonInteractionEvent event){
         current = Math.min(current + viewCount, list.size());
-        return table();
+        editViewMessage(event,
+                "```" + table() + "```");
     }
-
-    public static String previous(){
+    @Override
+    public void previous(ButtonInteractionEvent event){
         current = Math.max(current - viewCount, 0);
-        return table();
+        editViewMessage(event,
+                "```" + table() + "```");
     }
-
-    public static String last(){
+    @Override
+    public void last(ButtonInteractionEvent event){
         current = list.size() - viewCount;
-        return table();
+        editViewMessage(event,
+                "```" + table() + "```");
     }
-
-    public static String first(){
+    @Override
+    public void first(ButtonInteractionEvent event){
         current = 0;
-        return table();
+        editViewMessage(event,
+                "```" + table() + "```");
     }
 
-    private static String spaces(int n){
+    private String spaces(int n){
         String res = "";
         for(int i = 0; i < n; i++)
             res += " ";
         return res;
     }
 
-    private static String dashes(int n){
+    private String dashes(int n){
         String res = "";
         for(int i = 0; i < n; i++)
             res += "-";

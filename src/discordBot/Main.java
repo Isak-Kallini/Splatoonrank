@@ -52,5 +52,6 @@ public class Main {
         } catch (InterruptedException e) {
             ErrorLogger.log(e);
         }
+        CommandHandler.init();
     }
 }
