@@ -1,7 +1,6 @@
 package discordBot.commands;
 
 import data.MatchData;
-import data.Team;
 import data.TeamData;
 import discordBot.ErrorLogger;
 import discordBot.Main;
@@ -9,81 +8,195 @@ import graphs.EloGraph;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
+import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.jfree.chart.ChartUtils;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.*;
 
-public class Elo {
+public class Elo implements Command, SelectEmbed{
 
-    public static void run(SlashCommandInteractionEvent event) {
+    private List<TeamData> list;
+    private List<String> teamStringList;
+    private int current = 0;
+    private final int viewCount = 10;
+
+    public Elo() {}
+
+    @Override
+    public void run(SlashCommandInteractionEvent event) {
         String name = event.getOption("team", null, OptionMapping::getAsString);
         Session s = Main.factory.openSession();
-        Query<TeamData> nameQuery = s.createQuery("from data.TeamData t where t.name like :name", TeamData.class);
+        Query<TeamData> nameQuery = s.createQuery("from data.TeamData t where t.name like :name order by elo desc", TeamData.class);
         nameQuery.setParameter("name", "%" + name + "%");
-        Iterator<TeamData> nameIterator = nameQuery.stream().iterator();
-        if(nameIterator.hasNext()) {
-            TeamData team = nameIterator.next();
-            System.out.println(team.getName());
-            Query<MatchData> query = s.
-                    createQuery("from data.MatchData t where t.top = :key", MatchData.class);
-            query.setParameter("key", team);
-            List<MatchData> topres = query.stream().toList();
+        List<TeamData> nameList = nameQuery.list();
+        list = nameList;
+        if(!nameList.isEmpty()) {
+            if(nameList.size() == 1) {
+                replyTeamStats(event, 1, s);
+            }else{
+                StringBuilder result = new StringBuilder();
+                teamStringList = new ArrayList<>();
+                int i = 1;
+                for(TeamData t: nameList){
+                    String str = i + " " + t.getElo() + " " + t.getName() + "\n";
+                    result.append(str);
+                    teamStringList.add(str);
+                    i++;
+                    if(i > viewCount){
+                        break;
+                    }
+                }
 
-            Query<MatchData> query2 = s.
-                    createQuery("from data.MatchData t where t.bot = :key", MatchData.class);
-            query2.setParameter("key", team);
-            List<MatchData> botres = query2.stream().toList();
+                MessageEmbed embed = (new EmbedBuilder()
+                        .setTitle("Teams matching: " + name)
+                        .setDescription(result.toString())).build();
 
-            TreeMap<Calendar, Integer> res = new TreeMap<>();
-            for (MatchData m : topres) {
-                res.put(m.getDate(), m.getTopElo());
+
+                event.replyEmbeds(embed).addActionRow(
+                        StringSelectMenu.create("teamEloCommand").addOptions(getOptionList()).build())
+                        .addActionRow(
+                        Button.primary("elo start", "start"),
+                        Button.primary("elo previous", "previous"),
+                        Button.primary("elo next", "next"),
+                        Button.primary("elo end", "end")
+                ).queue();
             }
-            for (MatchData m : botres) {
-                res.put(m.getDate(), m.getBotElo());
-            }
-            List<Integer> data = res.values().stream().toList();
-
-            EloGraph test = new EloGraph(team.getName(), data);
-            File file = new File(team.getName() + ".png");
-            try {
-                FileOutputStream out = new FileOutputStream(file);
-                ChartUtils.writeChartAsPNG(out, test.getChart(), 900, 500);
-            } catch (Exception e) {
-                ErrorLogger.log(e);
-            }
-            int wins = 0;
-            int losses = 0;
-
-            for (MatchData m : topres) {
-                if (m.getTopScore() > m.getBotScore())
-                    wins++;
-                else
-                    losses++;
-
-            }
-
-            MessageEmbed embed = new EmbedBuilder()
-                    .setTitle(team.getName())
-                    .setDescription("Current elo: " + team.getElo() + "\n" +
-                            "Number of matches: " + data.size() + "\n" +
-                            "Winrate: " + ((float) wins / (wins + losses)) + "\n" +
-                            "Highest elo: " + Collections.max(data) + "\n" +
-                            "Lowest elo: " + Collections.min(data))
-                    .setImage("attachment://graph.png").build();
-            //event.reply("yo").queue();
-            event.replyEmbeds(embed).addFiles(FileUpload.fromData(file, "graph.png")).queue();
-
-            file.deleteOnExit();
         }else{
             event.reply("Team not found").queue();
         }
         s.close();
+    }
+
+    public void editSearchMessage(ButtonInteractionEvent event, String desc){
+        System.out.println(teamStringList.get(0));
+        event.editComponents(
+                ActionRow.of(StringSelectMenu.create("teamEloCommand").addOptions(getOptionList()).build()),
+                ActionRow.of(
+                        Button.primary("elo start", "start"),
+                        Button.primary("elo previous", "previous"),
+                        Button.primary("elo next", "next"),
+                        Button.primary("elo end", "end")
+                )).queue();
+        event.getInteraction().getHook().editOriginalEmbeds(new EmbedBuilder()
+                .setDescription(desc)
+                .setFooter("Viewing " + (current + 1) + " to " + (current + viewCount) + " of " + list.size()).build()).queue();
+    }
+
+    public String table(){
+        String result = "";
+        teamStringList = new ArrayList<>();
+        int i = 1;
+        for(TeamData t: list.subList(current, Math.min(current + viewCount, list.size()))){
+            String str = i + " " + t.getElo() + " " + t.getName() + "\n";
+            result += str;
+            teamStringList.add(str);
+            i++;
+        }
+        return result;
+    }
+
+    public void next(ButtonInteractionEvent event){
+        if(list.size() > viewCount) {
+            current = Math.min(current + viewCount, list.size() - 1);
+            editSearchMessage(event, table());
+        }else {
+            event.deferEdit().queue();
+        }
+    }
+
+    public void previous(ButtonInteractionEvent event){
+        current = Math.max(current - viewCount, 0);
+        editSearchMessage(event, table());
+    }
+
+    public void last(ButtonInteractionEvent event){
+        if(list.size() > viewCount) {
+            current = list.size() - viewCount;
+            editSearchMessage(event, table());
+        }else {
+            event.deferEdit().queue();
+        }
+    }
+
+    public void first(ButtonInteractionEvent event){
+        current = 0;
+        editSearchMessage(event, table());
+    }
+
+    private List<SelectOption> getOptionList(){
+        List<SelectOption> optionList = new ArrayList<>();
+        for(String k: teamStringList){
+            optionList.add(SelectOption.of(k, k));
+        }
+        return optionList;
+    }
+
+    public void replyTeamStats(IReplyCallback event, Integer n, Session s){
+
+        TeamData team = list.get(current + n - 1);
+
+        Query<MatchData> query = s.
+                createQuery("from data.MatchData t where t.top = :key", MatchData.class);
+        query.setParameter("key", team);
+        List<MatchData> topres = query.stream().toList();
+
+        Query<MatchData> query2 = s.
+                createQuery("from data.MatchData t where t.bot = :key", MatchData.class);
+        query2.setParameter("key", team);
+        List<MatchData> botres = query2.stream().toList();
+
+        TreeMap<Calendar, Integer> res = new TreeMap<>();
+        for (MatchData m : topres) {
+            res.put(m.getDate(), m.getTopElo());
+        }
+        for (MatchData m : botres) {
+            res.put(m.getDate(), m.getBotElo());
+        }
+        List<Integer> data = res.values().stream().toList();
+
+        EloGraph test = new EloGraph(team.getName(), data);
+        File file = new File(team.getName() + ".png");
+        try {
+            FileOutputStream out = new FileOutputStream(file);
+            ChartUtils.writeChartAsPNG(out, test.getChart(), 900, 500);
+            out.close();
+        } catch (Exception e) {
+            ErrorLogger.log(e);
+        }
+        int wins = 0;
+        int losses = 0;
+
+        for (MatchData m : topres) {
+            if (m.getTopScore() > m.getBotScore())
+                wins++;
+            else
+                losses++;
+
+        }
+
+        MessageEmbed embed = new EmbedBuilder()
+                .setTitle(team.getName())
+                .setDescription("Current elo: " + team.getElo() + "\n" +
+                        "Number of matches: " + data.size() + "\n" +
+                        "Winrate: " + ((float) wins / (wins + losses)) + "\n" +
+                        "Highest elo: " + Collections.max(data) + "\n" +
+                        "Lowest elo: " + Collections.min(data))
+                .setImage("attachment://graph.png").build();
+        //event.reply("yo").queue();
+        event.replyEmbeds(embed).addFiles(FileUpload.fromData(file, "graph.png")).queue();
+
+        file.deleteOnExit();
     }
 }

@@ -18,15 +18,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static discordBot.Main.factory;
+import static discordBot.Utils.getLastMatchTime;
+import static discordBot.Utils.parseTime;
 
-public class Update {
+public class Update implements Command {
 
-    private static Calendar lastMatch;
-
-    public static void run(SlashCommandInteractionEvent event){
+    @Override
+    public void run(SlashCommandInteractionEvent event){
         event.reply("Updating").queue();
         Session session = factory.openSession();
-        lastMatch = getLastMatchTime(session);
         session.close();
         List<String> orgIds = new ArrayList<>();
         orgIds.add("621a9ffb2ebfb728063d8153"); //Mulloway Institute of turfing
@@ -53,7 +53,7 @@ public class Update {
 
 
 
-    public static void saveMatches(List<Match> matches, SessionFactory factory){
+    public void saveMatches(List<Match> matches, SessionFactory factory){
         for(data.Match m: matches) {
             Session session = factory.openSession();
             Transaction t = session.beginTransaction();
@@ -61,25 +61,25 @@ public class Update {
             data.TeamData top = matchData.getTop();
             if(!matchExists(matchData.getBattlefyId(), session)) {
                 if (exists(top, session)) {
-                    Query q = session.createQuery("select id from data.TeamData t where t.battlefy_id = :key");
+                    Query<TeamData> q = session.createQuery("from data.TeamData t where t.battlefy_id = :key", TeamData.class);
                     q.setParameter("key", top.getBattlefy_id());
-                    Integer id = (Integer) q.list().get(0);
+                    Integer id = q.list().get(0).getId();
                     matchData.setTop(session.get(TeamData.class, id));
                     matchData.getTop().setName(top.getName());
-                    session.save(matchData.getTop());
+                    session.persist(matchData.getTop());
                 } else {
-                    session.save(top);
+                    session.persist(top);
                 }
                 data.TeamData bot = matchData.getBot();
                 if (exists(bot, session)) {
-                    Query q = session.createQuery("select id from data.TeamData t where t.battlefy_id = :key");
+                    Query<TeamData> q = session.createQuery("from data.TeamData t where t.battlefy_id = :key", TeamData.class);
                     q.setParameter("key", bot.getBattlefy_id());
-                    Integer id = (Integer) q.list().get(0);
+                    Integer id = q.list().get(0).getId();
                     matchData.setBot(session.get(TeamData.class, id));
                     matchData.getBot().setName(bot.getName());
-                    session.save(matchData.getBot());
+                    session.persist(matchData.getBot());
                 } else {
-                    session.save(bot);
+                    session.persist(bot);
                 }
 
                 int topelo = matchData.getTop().getElo();
@@ -93,27 +93,27 @@ public class Update {
                 matchData.getTop().setElo(newtopelo);
                 matchData.getBot().setElo(newbotelo);
 
-                session.save(matchData);
+                session.persist(matchData);
                 t.commit();
             }
             session.close();
         }
     }
 
-    public static boolean matchExists(String id, Session s){
-        Query query = s.
-                createQuery("select 1 from data.MatchData t where t.battlefyId = :key");
+    public boolean matchExists(String id, Session s){
+        Query<Integer> query = s.
+                createQuery("select 1 from data.MatchData t where t.battlefyId = :key", Integer.class);
         query.setParameter("key", id);
         return query.uniqueResult() != null;
     }
 
-    public static int calculateElo(Integer topElo, Integer botElo, Integer topScore, Integer botScore){
+    public int calculateElo(Integer topElo, Integer botElo, Integer topScore, Integer botScore){
         if(topScore < 0)
             topScore = 0;
         if(botScore < 0)
             botScore = 0;
 
-        if(topScore == botScore)
+        if(topScore.equals(botScore))
             return topElo;
         double s = (topScore.doubleValue()/(topScore.doubleValue() + botScore.doubleValue()));
         double e = (1.0/(1.0 + Math.pow(10.0, ((botElo.doubleValue() - topElo.doubleValue())/400))));
@@ -122,14 +122,14 @@ public class Update {
         return (int) (topElo.doubleValue() + (50.0 * (s - e)));
     }
 
-    public static boolean exists(TeamData t, Session s){
-        Query query = s.
-                createQuery("select 1 from data.TeamData t where t.battlefy_id = :key");
+    public boolean exists(TeamData t, Session s){
+        Query<Integer> query = s.
+                createQuery("select 1 from data.TeamData t where t.battlefy_id = :key", Integer.class);
         query.setParameter("key", t.getBattlefy_id());
         return query.uniqueResult() != null;
     }
 
-    public static List<Tournament> getTournamentIds(String org) throws IOException {
+    public List<Tournament> getTournamentIds(String org) throws IOException {
         String startUrl = "https://search.battlefy.com/tournament/organization/" + org;
         URL url = new URL(startUrl + "/past?page=1&size=20");
         String json = IOUtils.toString(url, StandardCharsets.UTF_8);
@@ -149,7 +149,7 @@ public class Update {
                 JSONObject obj = (JSONObject) o;
                 if((obj.getString("gameID").equals("62f3f317e6035f56260f090f") || obj.getString("gameID").equals("58f234b8452f9403401579ac")) && obj.getInt("playersPerTeam") == 4) {
                     Tournament tournament = new Tournament(obj.getString("_id"));
-                    if(!tournament.getJson().has("lastCompletedMatchAt") || parseTime(tournament.getJson().getString("lastCompletedMatchAt")).compareTo(lastMatch) > 0) {
+                    if(!tournament.getJson().has("lastCompletedMatchAt") || parseTime(tournament.getJson().getString("lastCompletedMatchAt")).compareTo(getLastMatchTime()) > 0) {
                         tournaments.add(new Tournament(obj.getString("_id")));
                     }else{
                         break loop;
@@ -161,31 +161,6 @@ public class Update {
         return tournaments;
     }
 
-    public static Calendar parseTime(String time){
-        Calendar date = new GregorianCalendar();
-        date.set(Calendar.YEAR, Integer.parseInt(time.substring(0, 4)));
-        date.set(Calendar.MONTH, Integer.parseInt(time.substring(5, 7)) - 1);
-        date.set(Calendar.DAY_OF_MONTH, Integer.parseInt(time.substring(8, 10)));
-        date.set(Calendar.HOUR_OF_DAY, Integer.parseInt(time.substring(11, 13)));
-        date.set(Calendar.MINUTE, Integer.parseInt(time.substring(14,16)));
-        date.set(Calendar.SECOND, Integer.parseInt(time.substring(17, 19)));
-        return date;
-    }
 
-    public static Calendar getLastMatch() {
-        return lastMatch;
-    }
-
-    public static Calendar getLastMatchTime(Session s){
-        Query q = s.createQuery("SELECT MAX(date) FROM data.MatchData");
-        Calendar time = (Calendar) q.uniqueResult();
-        if(time == null){
-            Calendar c = new GregorianCalendar();
-            c.setTimeInMillis(0);
-            return c;
-        }else {
-            return time;
-        }
-    }
 
 }
