@@ -60,7 +60,7 @@ public class Update implements Command {
             data.MatchData matchData = m.getData();
             data.TeamData top = matchData.getTop();
             if(!matchExists(matchData.getBattlefyId(), session)) {
-                if (exists(top, session)) {
+                if (exists(top, session).isPresent()) {
                     Query<TeamData> q = session.createQuery("from data.TeamData t where t.battlefy_id = :key", TeamData.class);
                     q.setParameter("key", top.getBattlefy_id());
                     Integer id = q.list().get(0).getId();
@@ -71,7 +71,7 @@ public class Update implements Command {
                     session.persist(top);
                 }
                 data.TeamData bot = matchData.getBot();
-                if (exists(bot, session)) {
+                if (exists(bot, session).isPresent()) {
                     Query<TeamData> q = session.createQuery("from data.TeamData t where t.battlefy_id = :key", TeamData.class);
                     q.setParameter("key", bot.getBattlefy_id());
                     Integer id = q.list().get(0).getId();
@@ -122,11 +122,15 @@ public class Update implements Command {
         return (int) (topElo.doubleValue() + (50.0 * (s - e)));
     }
 
-    public boolean exists(TeamData t, Session s){
-        Query<Integer> query = s.
-                createQuery("select 1 from data.TeamData t where t.battlefy_id = :key", Integer.class);
+    public Optional<TeamData> exists(TeamData t, Session s){
+        Query<TeamData> query = s.
+                createQuery("from data.TeamData t where t.battlefy_id = :key", TeamData.class);
         query.setParameter("key", t.getBattlefy_id());
-        return query.uniqueResult() != null;
+        Optional<TeamData> res = Optional.of(query.uniqueResult());
+        if(res.isEmpty()){
+
+        }
+        return Optional.of(query.uniqueResult());
     }
 
     public List<Tournament> getTournamentIds(String org) throws IOException {

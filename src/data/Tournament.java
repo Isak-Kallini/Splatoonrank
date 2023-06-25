@@ -10,6 +10,7 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -29,8 +30,17 @@ public class Tournament {
     private List<Match> matches = new ArrayList<>();
     public Tournament(String tournamentId) throws IOException {
         id = tournamentId;
+        Player.players = new HashMap<>();
+        url = new URL("https://dtmwra1jsgyb0.cloudfront.net/tournaments/" + id + "/participants");
+        JSONArray participantJson = new JSONArray(IOUtils.toString(url, StandardCharsets.UTF_8));
+        for (Object j:
+             participantJson) {
+            Player.players.put(((JSONObject) j).getString("_id"), ((JSONObject) j).getString("inGameName"));
+        }
+
+
         url = new URL("https://dtmwra1jsgyb0.cloudfront.net/tournaments/" + id);
-        json = new JSONObject(IOUtils.toString(url, Charset.forName("UTF-8")));
+        json = new JSONObject(IOUtils.toString(url, StandardCharsets.UTF_8));
         JSONArray stageArray = json.getJSONArray("stageIDs");
         for(Object o: stageArray){
             stageids.add((String) o);
