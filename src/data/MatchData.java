@@ -56,6 +56,22 @@ public class MatchData{
         this.botElo = botElo;
     }
 
+    public void set(TeamData t){
+        if(t.getIdent().equals("top")){
+            setTop(t);
+        }else{
+            setBot(t);
+        }
+    }
+
+    public TeamData get(TeamData t){
+        if(t.getIdent().equals("top")){
+            return getTop();
+        }else{
+            return getBot();
+        }
+    }
+
     public TeamData getTop() {
         return top;
     }

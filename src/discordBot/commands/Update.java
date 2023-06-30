@@ -1,6 +1,7 @@
 package discordBot.commands;
 
 import data.Match;
+import data.PlayerData;
 import data.TeamData;
 import data.Tournament;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -29,12 +30,12 @@ public class Update implements Command {
         Session session = factory.openSession();
         session.close();
         List<String> orgIds = new ArrayList<>();
-        orgIds.add("621a9ffb2ebfb728063d8153"); //Mulloway Institute of turfing
-        orgIds.add("61c24af8dfe38d7b8d22a78f"); //20xx
-        orgIds.add("600339ee8c847d119d4b773c"); //squid junction
-        orgIds.add("5c6dbd2da605be0329ecf36a"); //IPL
-        orgIds.add("5f3da7d7a3f8871d5075d66d"); //LSL
-        orgIds.add("6223711c9b1bd8194d3622d3"); //Splatalittle
+        //orgIds.add("621a9ffb2ebfb728063d8153"); //Mulloway Institute of turfing
+        //orgIds.add("61c24af8dfe38d7b8d22a78f"); //20xx
+        //orgIds.add("600339ee8c847d119d4b773c"); //squid junction
+        //orgIds.add("5c6dbd2da605be0329ecf36a"); //IPL
+        //orgIds.add("5f3da7d7a3f8871d5075d66d"); //LSL
+        //orgIds.add("6223711c9b1bd8194d3622d3"); //Splatalittle
         orgIds.add("61536b3608427730510f9ea6"); //From The Ink UP
         List<Tournament> tournaments = new ArrayList<>();
         orgIds.forEach(o -> {
@@ -58,45 +59,60 @@ public class Update implements Command {
             Session session = factory.openSession();
             Transaction t = session.beginTransaction();
             data.MatchData matchData = m.getData();
-            data.TeamData top = matchData.getTop();
-            if(!matchExists(matchData.getBattlefyId(), session)) {
-                if (exists(top, session).isPresent()) {
-                    Query<TeamData> q = session.createQuery("from data.TeamData t where t.battlefy_id = :key", TeamData.class);
-                    q.setParameter("key", top.getBattlefy_id());
-                    Integer id = q.list().get(0).getId();
-                    matchData.setTop(session.get(TeamData.class, id));
-                    matchData.getTop().setName(top.getName());
-                    session.persist(matchData.getTop());
-                } else {
-                    session.persist(top);
-                }
-                data.TeamData bot = matchData.getBot();
-                if (exists(bot, session).isPresent()) {
-                    Query<TeamData> q = session.createQuery("from data.TeamData t where t.battlefy_id = :key", TeamData.class);
-                    q.setParameter("key", bot.getBattlefy_id());
-                    Integer id = q.list().get(0).getId();
-                    matchData.setBot(session.get(TeamData.class, id));
-                    matchData.getBot().setName(bot.getName());
-                    session.persist(matchData.getBot());
-                } else {
-                    session.persist(bot);
-                }
+            List<data.TeamData> dataList = new ArrayList<>();
+            matchData.getTop().setIdent("top");
+            matchData.getBot().setIdent("bot");
+            dataList.add(matchData.getTop());
+            dataList.add(matchData.getBot());
 
-                int topelo = matchData.getTop().getElo();
-                int topscore = matchData.getTopScore();
-                int botelo = matchData.getBot().getElo();
-                int botscore = matchData.getBotScore();
-                int newtopelo = calculateElo(topelo, botelo, topscore, botscore);
-                int newbotelo = calculateElo(botelo, topelo, botscore, topscore);
-                matchData.setTopElo(newtopelo);
-                matchData.setBotElo(newbotelo);
-                matchData.getTop().setElo(newtopelo);
-                matchData.getBot().setElo(newbotelo);
-
-                session.persist(matchData);
-                t.commit();
+            for(data.TeamData d: dataList){
+                if(!matchExists(matchData.getBattlefyId(), session)) {
+                    if (exists(d, session)) {
+                        Query<TeamData> q = session.createQuery("from data.TeamData t where t.battlefy_id = :key", TeamData.class);
+                        q.setParameter("key", d.getBattlefy_id());
+                        Integer id = q.list().get(0).getId();
+                        TeamData temp = session.get(TeamData.class, id);
+                        temp.setIdent(d.getIdent());
+                        temp.setName(d.getName());
+                        temp.setPlayers(d.getPlayers());
+                        persistPlayers(temp, session);
+                        matchData.set(temp);
+                        session.persist(matchData.get(temp));
+                    } else {
+                        persistPlayers(d, session);
+                        session.persist(matchData.get(d));
+                    }
+                }
             }
+
+            int topelo = matchData.getTop().getElo();
+            int topscore = matchData.getTopScore();
+            int botelo = matchData.getBot().getElo();
+            int botscore = matchData.getBotScore();
+            int newtopelo = calculateElo(topelo, botelo, topscore, botscore);
+            int newbotelo = calculateElo(botelo, topelo, botscore, topscore);
+            matchData.setTopElo(newtopelo);
+            matchData.setBotElo(newbotelo);
+            matchData.getTop().setElo(newtopelo);
+            matchData.getBot().setElo(newbotelo);
+
+            session.persist(matchData);
+            t.commit();
             session.close();
+        }
+    }
+
+    public void persistPlayers(TeamData d, Session session){
+        for (PlayerData p : d.getPlayers()) {
+            if(!exists(p, session)) {
+                session.persist(p);
+            }else{
+                Query<PlayerData> q = session.createQuery("from data.PlayerData t where t.battlefy_id = :key", PlayerData.class);
+                q.setParameter("key", p.getBattlefy_id());
+                List<PlayerData> ps = d.getPlayers();
+                ps.set(d.getPlayers().indexOf(p), q.uniqueResult());
+                d.setPlayers(ps);
+            }
         }
     }
 
@@ -122,15 +138,18 @@ public class Update implements Command {
         return (int) (topElo.doubleValue() + (50.0 * (s - e)));
     }
 
-    public Optional<TeamData> exists(TeamData t, Session s){
+    public boolean exists(TeamData t, Session s){
         Query<TeamData> query = s.
                 createQuery("from data.TeamData t where t.battlefy_id = :key", TeamData.class);
         query.setParameter("key", t.getBattlefy_id());
-        Optional<TeamData> res = Optional.of(query.uniqueResult());
-        if(res.isEmpty()){
+        return query.uniqueResult() != null;
+    }
 
-        }
-        return Optional.of(query.uniqueResult());
+    public boolean exists(PlayerData p, Session s){
+        Query<PlayerData> query = s.
+                createQuery("from data.PlayerData p where p.battlefy_id = :key", PlayerData.class);
+        query.setParameter("key", p.getBattlefy_id());
+        return query.uniqueResult() != null;
     }
 
     public List<Tournament> getTournamentIds(String org) throws IOException {

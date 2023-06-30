@@ -20,6 +20,9 @@ public class Utils {
     }
 
     public static Calendar getLastMatchTime() {
+        Calendar cal = new GregorianCalendar();
+        cal.set(Calendar.DAY_OF_MONTH, 1);
+        return cal;/*
         Session s = Main.factory.openSession();
         Query<Calendar> q = s.createQuery("SELECT MAX(date) FROM data.MatchData", Calendar.class);
         Calendar time = q.uniqueResult();
@@ -30,6 +33,6 @@ public class Utils {
             return c;
         }else {
             return time;
-        }
+        }*/
     }
 }

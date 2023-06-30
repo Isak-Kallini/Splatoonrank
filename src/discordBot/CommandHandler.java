@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionE
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static discordBot.commands.Ranking.*;
@@ -48,7 +49,8 @@ public class CommandHandler extends ListenerAdapter {
     @Override
     public void onStringSelectInteraction(StringSelectInteractionEvent event){
         if(event.getComponentId().equals("teamEloCommand")){
-            ((Elo) commandMap.get("elo")).replyTeamStats(event, Integer.parseInt(event.getValues().get(event.getValues().size() - 1).split(" ")[0]), Main.factory.openSession());
+            List<String> eventValues = event.getValues();
+            ((Elo) commandMap.get("elo")).replyTeamStats(event, Integer.parseInt(eventValues.get(eventValues.size() - 1).split(" ")[0]), Main.factory.openSession());
         }
     }
 }

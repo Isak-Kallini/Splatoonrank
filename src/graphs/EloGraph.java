@@ -10,7 +10,6 @@ import org.jfree.chart.ui.ApplicationFrame;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 
-import javax.swing.*;
 import java.util.Collections;
 import java.util.List;
 
