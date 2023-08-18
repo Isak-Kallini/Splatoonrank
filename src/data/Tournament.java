@@ -46,7 +46,7 @@ public class Tournament {
             stageids.add((String) o);
         }
 
-        System.out.println("tournament: " + id);
+        System.out.println("tournament: " + json.getString("name") + " - " + json.getString("updatedAt"));
         for(String s: stageids){
             URL url = new URL("https://dtmwra1jsgyb0.cloudfront.net/stages/" + s + "/matches");
             JSONArray stageJson = new JSONArray(IOUtils.toString(url, StandardCharsets.UTF_8));

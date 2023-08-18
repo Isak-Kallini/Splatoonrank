@@ -18,7 +18,6 @@ public class Match implements Comparable<Match>{
     private String battlefyId;
 
     public Match(JSONObject json){
-        System.out.println("match: " + json.getString("_id"));
         top = new Team(json.getJSONObject("top"));
         topScore = json.getJSONObject("top").getInt("score");
         bot = new Team(json.getJSONObject("bottom"));
@@ -33,6 +32,7 @@ public class Match implements Comparable<Match>{
         date.set(Calendar.MINUTE, Integer.parseInt(completed.substring(14,16)));
         date.set(Calendar.SECOND, Integer.parseInt(completed.substring(17, 19)));
         setBattlefyId(json.getString("_id"));
+        System.out.println("match: " + top.getName() + " vs " + bot.getName() + " - " + date.get(Calendar.YEAR) + date.get(Calendar.MONTH) + date.get(Calendar.DAY_OF_MONTH));
     }
 
     public MatchData getData(){

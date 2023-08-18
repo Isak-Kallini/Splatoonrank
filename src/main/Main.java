@@ -31,6 +31,6 @@ public class Main {
         SessionFactory factory = meta.getSessionFactoryBuilder().build();
 
         discordBot.Main.initialize(factory);
-
+        //new discordBot.commands.Update().runNoDiscord();
     }
 }

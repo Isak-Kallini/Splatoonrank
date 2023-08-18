@@ -16,13 +16,17 @@ import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
+import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import net.dv8tion.jda.api.utils.FileUpload;
+import net.dv8tion.jda.internal.requests.restaction.interactions.ReplyCallbackActionImpl;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.jfree.chart.ChartUtils;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.io.FileOutputStream;
+import java.nio.file.Path;
 import java.util.*;
 
 public class Elo implements Command, SelectEmbed{
@@ -38,7 +42,7 @@ public class Elo implements Command, SelectEmbed{
     public void run(SlashCommandInteractionEvent event) {
         String name = event.getOption("team", null, OptionMapping::getAsString);
         Session s = Main.factory.openSession();
-        Query<TeamData> nameQuery = s.createQuery("from data.TeamData t where t.name like :name order by elo desc", TeamData.class);
+        Query<TeamData> nameQuery = s.createQuery("from data.TeamData t where t.name like :name order by (select MAX(date) FROM data.MatchData m WHERE m.top = t OR m.bot = t) desc", TeamData.class);
         nameQuery.setParameter("name", "%" + name + "%");
         List<TeamData> nameList = nameQuery.list();
         list = nameList;
@@ -143,11 +147,11 @@ public class Elo implements Command, SelectEmbed{
         return optionList;
     }
 
-    public void replyTeamStats(IReplyCallback event, Integer n, Session s){
+    public void replyTeamStats(IReplyCallback event, Integer n, Session s) {
 
         TeamData team = list.get(current + n - 1);
 
-        Query<MatchData> query = s.
+        /*Query<MatchData> query = s.
                 createQuery("from data.MatchData t where t.top = :key", MatchData.class);
         query.setParameter("key", team);
         List<MatchData> topres = query.stream().toList();
@@ -163,7 +167,21 @@ public class Elo implements Command, SelectEmbed{
         }
         for (MatchData m : botres) {
             res.put(m.getDate(), m.getBotElo());
+        }*/
+
+        Query<MatchData> matchDataQuery = s.createQuery("FROM data.MatchData t WHERE t.bot = :key OR t.top = :key", MatchData.class);
+        matchDataQuery.setParameter("key", team);
+        List<MatchData> queryRes = matchDataQuery.list();
+
+        TreeMap<Calendar, Integer> res = new TreeMap<>();
+        for(MatchData m: queryRes){
+            if(m.getTop().equals(team)){
+                res.put(m.getDate(), m.getTopElo());
+            }else if(m.getBot().equals(team)){
+                res.put(m.getDate(), m.getBotElo());
+            }
         }
+
         List<Integer> data = res.values().stream().toList();
 
         EloGraph test = new EloGraph(team.getName(), data);
@@ -178,12 +196,11 @@ public class Elo implements Command, SelectEmbed{
         int wins = 0;
         int losses = 0;
 
-        for (MatchData m : topres) {
-            if (m.getTopScore() > m.getBotScore())
+        for (MatchData m : queryRes) {
+            if(isWin(m, team))
                 wins++;
             else
                 losses++;
-
         }
 
         MessageEmbed embed = new EmbedBuilder()
@@ -194,9 +211,13 @@ public class Elo implements Command, SelectEmbed{
                         "Highest elo: " + Collections.max(data) + "\n" +
                         "Lowest elo: " + Collections.min(data))
                 .setImage("attachment://graph.png").build();
-        //event.reply("yo").queue();
-        event.replyEmbeds(embed).addFiles(FileUpload.fromData(file, "graph.png")).queue();
+        event.replyEmbeds(embed).addFiles(FileUpload.fromData(file, "graph.png")).complete();
 
-        file.deleteOnExit();
+        file.delete();
+    }
+
+    private boolean isWin(MatchData m, TeamData team){
+        boolean teamIsTop = m.getTop().equals(team);
+        return m.getTopScore() > m.getBotScore() && teamIsTop || m.getTopScore() < m.getBotScore() && !teamIsTop;
     }
 }

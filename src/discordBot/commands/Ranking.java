@@ -1,5 +1,6 @@
 package discordBot.commands;
 
+import data.MatchData;
 import data.TeamData;
 import discordBot.Main;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -11,24 +12,40 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 public class Ranking extends ListenerAdapter implements Command, SelectEmbed {
+    private List<TeamData> templist;
     private List<TeamData> list;
     private int current = 0;
-    private int viewCount = 10;
+    private final int viewCount = 10;
     @Override
     public void run(SlashCommandInteractionEvent event) {
+        event.reply("loading").queue();
         current = 0;
         Session s = Main.factory.openSession();
         Query<TeamData> query = s.createQuery("from data.TeamData order by elo desc", TeamData.class);
-        list = query.list();
+        templist = query.list();
+        list = new ArrayList<>();
+        for(TeamData t: templist){
+            Query<Calendar> lastDate = s.createQuery("select MAX(date) FROM data.MatchData m WHERE m.top = :team OR m.bot = :team", Calendar.class);
+            lastDate.setParameter("team", t);
+            Calendar lastMatch = lastDate.getSingleResult();
+            Calendar currentCal = new GregorianCalendar();
+            long diff = currentCal.getTime().getTime() - lastMatch.getTimeInMillis();
+            if(diff < 30L *3*24*60*60*1000){
+                list.add(t);
+            }
+        }
 
         MessageEmbed embed = new EmbedBuilder()
                 .setDescription("```" + table() + "```")
                 .setFooter("Viewing 1 to " + (current + viewCount)  + " of " + list.size()).build();
 
-        event.replyEmbeds(embed).addActionRow(
+        event.getChannel().sendMessageEmbeds(embed).addActionRow(
                 Button.primary("ranking start", "start"),
                 Button.primary("ranking previous", "previous"),
                 Button.primary("ranking next", "next"),
