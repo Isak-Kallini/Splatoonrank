@@ -1,8 +1,10 @@
 package data;
 
 import jakarta.persistence.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "teams")
@@ -69,5 +71,18 @@ public class TeamData {
 
     public void setIdent(String ident) {
         this.ident = ident;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TeamData teamData = (TeamData) o;
+        return Objects.equals(id, teamData.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }
