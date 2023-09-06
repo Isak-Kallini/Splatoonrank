@@ -19,8 +19,12 @@ import static discordBot.Main.factory;
 import static discordBot.Utils.getLastMatchTime;
 import static discordBot.Utils.parseTime;
 
-public class Update implements Command {
+public class Update extends Command {
 
+    public Update(){
+        super.name = "update";
+        super.desc = "Get new matches from battlefy";
+    }
     @Override
     public void run(SlashCommandInteractionEvent event){
         event.reply("Updating").queue();

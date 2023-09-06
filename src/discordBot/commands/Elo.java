@@ -9,34 +9,35 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
-import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import net.dv8tion.jda.api.utils.FileUpload;
-import net.dv8tion.jda.internal.requests.restaction.interactions.ReplyCallbackActionImpl;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.jfree.chart.ChartUtils;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.io.FileOutputStream;
-import java.nio.file.Path;
 import java.util.*;
 
-public class Elo implements Command, SelectEmbed{
+import static net.dv8tion.jda.api.interactions.commands.OptionType.STRING;
 
+public class Elo extends Command implements SelectEmbed {
     private List<TeamData> list;
     private List<String> teamStringList;
     private int current = 0;
     private final int viewCount = 10;
 
-    public Elo() {}
+    public Elo() {
+        super.name = "elo";
+        super.desc = "Get elo of a team";
+        super.options.add(new OptionData(STRING, "team", "filter by team").setRequired(true));
+    }
 
     @Override
     public void run(SlashCommandInteractionEvent event) {

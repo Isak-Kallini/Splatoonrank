@@ -32,19 +32,11 @@ public class Main {
                 .addEventListeners(new CommandHandler())
                 .build();
         CommandListUpdateAction commands = jda.updateCommands();
-        commands.addCommands(
-                Commands.slash("elo", "Get elo of a team")
-                        .addOptions(new OptionData(STRING, "team", "filter by team")
-                                .setRequired(true))
-        );
 
-        commands.addCommands(
-                Commands.slash("update", "Get new matches from battlefy")
-        );
 
-        commands.addCommands(
-                Commands.slash("ranking", "get team ranking")
-        );
+
+
+        CommandHandler.init(commands);
 
         commands.queue();
         try {
@@ -52,6 +44,5 @@ public class Main {
         } catch (InterruptedException e) {
             ErrorLogger.log(e);
         }
-        CommandHandler.init();
     }
 }

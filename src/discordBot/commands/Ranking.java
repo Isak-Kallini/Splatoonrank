@@ -1,13 +1,11 @@
 package discordBot.commands;
 
-import data.MatchData;
 import data.TeamData;
 import discordBot.Main;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
@@ -17,11 +15,17 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
 
-public class Ranking extends ListenerAdapter implements Command, SelectEmbed {
+public class Ranking extends Command implements SelectEmbed {
     private List<TeamData> templist;
     private List<TeamData> list;
     private int current = 0;
     private final int viewCount = 10;
+
+    public Ranking(){
+        super.name = "ranking";
+        super.desc = "get team ranking";
+    }
+
     @Override
     public void run(SlashCommandInteractionEvent event) {
         event.reply("loading").queue();
@@ -51,6 +55,7 @@ public class Ranking extends ListenerAdapter implements Command, SelectEmbed {
                 Button.primary("ranking next", "next"),
                 Button.primary("ranking end", "end")).queue();
     }
+
 
     public void editViewMessage(ButtonInteractionEvent event, String desc){
         event.editMessageEmbeds(new EmbedBuilder()
