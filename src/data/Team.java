@@ -1,7 +1,11 @@
 package data;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Team {
     private String name;
@@ -11,13 +15,25 @@ public class Team {
 
     private Integer elo = 1000;
 
+    private List<Player> players;
+
     public Team(JSONObject o){
+        players = new ArrayList<>();
         json = o;
-        setName(json.getJSONObject("team").getString("name"));
+        String temp = json.getJSONObject("team").getString("name");
+        if(temp.length() > 100){
+            setName(temp.substring(0,100));
+        }else{
+            setName(temp);
+        }
         try {
             setBattlefyId(json.getJSONObject("team").getString("persistentTeamID"));
         }catch (JSONException e){
             setBattlefyId("invalid");
+        }
+        JSONArray playerIds = json.getJSONObject("team").getJSONArray("playerIDs");
+        for(Object s: playerIds){
+            players.add(new Player((String) s));
         }
     }
 
@@ -26,6 +42,11 @@ public class Team {
         data.setBattlefyId(battlefy_id);
         data.setElo(elo);
         data.setName(name);
+        List<PlayerData> pdata = new ArrayList<>();
+        for(Player p: players){
+            pdata.add(p.getPlayerData());
+        }
+        data.setPlayers(pdata);
         return data;
     }
 

@@ -1,16 +1,15 @@
 <component name="libraryTable">
   <library name="hibernate.core" type="repository">
-    <properties maven-id="org.hibernate:hibernate-core:6.0.0.Final" />
+    <properties maven-id="org.hibernate:hibernate-core:6.1.7.Final" />
     <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/org/hibernate/orm/hibernate-core/6.0.0.Final/hibernate-core-6.0.0.Final.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/hibernate/orm/hibernate-core/6.1.7.Final/hibernate-core-6.1.7.Final.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/jakarta/persistence/jakarta.persistence-api/3.0.0/jakarta.persistence-api-3.0.0.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/jakarta/transaction/jakarta.transaction-api/2.0.0/jakarta.transaction-api-2.0.0.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/org/jboss/logging/jboss-logging/3.4.3.Final/jboss-logging-3.4.3.Final.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/hibernate/common/hibernate-commons-annotations/6.0.6.Final/hibernate-commons-annotations-6.0.6.Final.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/org/jboss/jandex/2.4.2.Final/jandex-2.4.2.Final.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/classmate/1.5.1/classmate-1.5.1.jar!/" />
-      <root url="jar://$MAVEN_REPOSITORY$/org/hibernate/common/hibernate-commons-annotations/6.0.0.CR1/hibernate-commons-annotations-6.0.0.CR1.jar!/" />
-      <root url="jar://$MAVEN_REPOSITORY$/net/bytebuddy/byte-buddy/1.12.8/byte-buddy-1.12.8.jar!/" />
-      <root url="jar://$MAVEN_REPOSITORY$/jakarta/activation/jakarta.activation-api/2.0.1/jakarta.activation-api-2.0.1.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/net/bytebuddy/byte-buddy/1.12.18/byte-buddy-1.12.18.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/jakarta/xml/bind/jakarta.xml.bind-api/3.0.1/jakarta.xml.bind-api-3.0.1.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/com/sun/activation/jakarta.activation/2.0.1/jakarta.activation-2.0.1.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jaxb/jaxb-runtime/3.0.2/jaxb-runtime-3.0.2.jar!/" />
@@ -18,17 +17,16 @@
       <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jaxb/txw2/3.0.2/txw2-3.0.2.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/com/sun/istack/istack-commons-runtime/4.0.1/istack-commons-runtime-4.0.1.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/jakarta/inject/jakarta.inject-api/2.0.0/jakarta.inject-api-2.0.0.jar!/" />
-      <root url="jar://$MAVEN_REPOSITORY$/org/antlr/antlr4-runtime/4.9.1/antlr4-runtime-4.9.1.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/antlr/antlr4-runtime/4.10.1/antlr4-runtime-4.10.1.jar!/" />
     </CLASSES>
     <JAVADOC>
-      <root url="jar://$MAVEN_REPOSITORY$/org/hibernate/orm/hibernate-core/6.0.0.Final/hibernate-core-6.0.0.Final-javadoc.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/hibernate/orm/hibernate-core/6.1.7.Final/hibernate-core-6.1.7.Final-javadoc.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/jakarta/persistence/jakarta.persistence-api/3.0.0/jakarta.persistence-api-3.0.0-javadoc.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/jakarta/transaction/jakarta.transaction-api/2.0.0/jakarta.transaction-api-2.0.0-javadoc.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/org/jboss/logging/jboss-logging/3.4.3.Final/jboss-logging-3.4.3.Final-javadoc.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/hibernate/common/hibernate-commons-annotations/6.0.6.Final/hibernate-commons-annotations-6.0.6.Final-javadoc.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/com/fasterxml/classmate/1.5.1/classmate-1.5.1-javadoc.jar!/" />
-      <root url="jar://$MAVEN_REPOSITORY$/org/hibernate/common/hibernate-commons-annotations/6.0.0.CR1/hibernate-commons-annotations-6.0.0.CR1-javadoc.jar!/" />
-      <root url="jar://$MAVEN_REPOSITORY$/net/bytebuddy/byte-buddy/1.12.8/byte-buddy-1.12.8-javadoc.jar!/" />
-      <root url="jar://$MAVEN_REPOSITORY$/jakarta/activation/jakarta.activation-api/2.0.1/jakarta.activation-api-2.0.1-javadoc.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/net/bytebuddy/byte-buddy/1.12.18/byte-buddy-1.12.18-javadoc.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/jakarta/xml/bind/jakarta.xml.bind-api/3.0.1/jakarta.xml.bind-api-3.0.1-javadoc.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/com/sun/activation/jakarta.activation/2.0.1/jakarta.activation-2.0.1-javadoc.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jaxb/jaxb-runtime/3.0.2/jaxb-runtime-3.0.2-javadoc.jar!/" />
@@ -36,7 +34,7 @@
       <root url="jar://$MAVEN_REPOSITORY$/org/glassfish/jaxb/txw2/3.0.2/txw2-3.0.2-javadoc.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/com/sun/istack/istack-commons-runtime/4.0.1/istack-commons-runtime-4.0.1-javadoc.jar!/" />
       <root url="jar://$MAVEN_REPOSITORY$/jakarta/inject/jakarta.inject-api/2.0.0/jakarta.inject-api-2.0.0-javadoc.jar!/" />
-      <root url="jar://$MAVEN_REPOSITORY$/org/antlr/antlr4-runtime/4.9.1/antlr4-runtime-4.9.1-javadoc.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/antlr/antlr4-runtime/4.10.1/antlr4-runtime-4.10.1-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES />
   </library>

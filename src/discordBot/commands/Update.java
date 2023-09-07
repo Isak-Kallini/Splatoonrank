@@ -1,8 +1,6 @@
 package discordBot.commands;
 
-import data.Match;
-import data.TeamData;
-import data.Tournament;
+import data.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import org.apache.commons.io.IOUtils;
 import org.hibernate.Session;
@@ -21,8 +19,12 @@ import static discordBot.Main.factory;
 import static discordBot.Utils.getLastMatchTime;
 import static discordBot.Utils.parseTime;
 
-public class Update implements Command {
+public class Update extends Command {
 
+    public Update(){
+        super.name = "update";
+        super.desc = "Get new matches from battlefy";
+    }
     @Override
     public void run(SlashCommandInteractionEvent event){
         event.reply("Updating").queue();
@@ -48,38 +50,65 @@ public class Update implements Command {
         tournaments.forEach(tournament -> matches.addAll(tournament.getMatches()));
         matches.sort(Comparator.naturalOrder());
         event.getChannel().sendMessage("Found " + matches.size() + " new matches").queue();
+        event.getChannel().sendMessage("Saving").queue();
+        saveMatches(matches, factory);
+        event.getChannel().sendMessage("Saved").queue();
+    }
+
+    public void runNoDiscord(){
+        Session session = factory.openSession();
+        session.close();
+        List<String> orgIds = new ArrayList<>();
+        orgIds.add("621a9ffb2ebfb728063d8153"); //Mulloway Institute of turfing
+        orgIds.add("61c24af8dfe38d7b8d22a78f"); //20xx
+        orgIds.add("600339ee8c847d119d4b773c"); //squid junction
+        orgIds.add("5c6dbd2da605be0329ecf36a"); //IPL
+        orgIds.add("5f3da7d7a3f8871d5075d66d"); //LSL
+        orgIds.add("6223711c9b1bd8194d3622d3"); //Splatalittle
+        orgIds.add("61536b3608427730510f9ea6"); //From The Ink UP
+        List<Tournament> tournaments = new ArrayList<>();
+        orgIds.forEach(o -> {
+            try {
+                tournaments.addAll(getTournamentIds(o));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        List<Match> matches = new ArrayList<>();
+        tournaments.forEach(tournament -> matches.addAll(tournament.getMatches()));
+        matches.sort(Comparator.naturalOrder());
         saveMatches(matches, factory);
     }
 
 
 
     public void saveMatches(List<Match> matches, SessionFactory factory){
-        for(data.Match m: matches) {
+        for(Match m: matches) {
             Session session = factory.openSession();
-            Transaction t = session.beginTransaction();
-            data.MatchData matchData = m.getData();
-            data.TeamData top = matchData.getTop();
-            if(!matchExists(matchData.getBattlefyId(), session)) {
-                if (exists(top, session)) {
-                    Query<TeamData> q = session.createQuery("from data.TeamData t where t.battlefy_id = :key", TeamData.class);
-                    q.setParameter("key", top.getBattlefy_id());
-                    Integer id = q.list().get(0).getId();
-                    matchData.setTop(session.get(TeamData.class, id));
-                    matchData.getTop().setName(top.getName());
-                    session.persist(matchData.getTop());
-                } else {
-                    session.persist(top);
-                }
-                data.TeamData bot = matchData.getBot();
-                if (exists(bot, session)) {
-                    Query<TeamData> q = session.createQuery("from data.TeamData t where t.battlefy_id = :key", TeamData.class);
-                    q.setParameter("key", bot.getBattlefy_id());
-                    Integer id = q.list().get(0).getId();
-                    matchData.setBot(session.get(TeamData.class, id));
-                    matchData.getBot().setName(bot.getName());
-                    session.persist(matchData.getBot());
-                } else {
-                    session.persist(bot);
+            if(!matchExists(m.getBattlefyId(), session)) {
+                Transaction t = session.beginTransaction();
+                MatchData matchData = m.getData();
+                List<TeamData> dataList = new ArrayList<>();
+                matchData.getTop().setIdent("top");
+                matchData.getBot().setIdent("bot");
+                dataList.add(matchData.getTop());
+                dataList.add(matchData.getBot());
+
+                for (TeamData d : dataList) {
+                    if (!matchExists(matchData.getBattlefyId(), session)) {
+                        TeamData team = exists(d, session);
+                        if (team != null) {
+                            team.setIdent(d.getIdent());
+                            team.setName(d.getName());
+                            team.setPlayers(d.getPlayers());
+                            persistPlayers(team, session);
+                            matchData.set(team);
+                            session.persist(matchData.get(team));
+                        } else {
+                            persistPlayers(d, session);
+                            session.persist(matchData.get(d));
+                        }
+                    }
                 }
 
                 int topelo = matchData.getTop().getElo();
@@ -95,8 +124,22 @@ public class Update implements Command {
 
                 session.persist(matchData);
                 t.commit();
+                session.close();
             }
-            session.close();
+        }
+    }
+
+    public void persistPlayers(TeamData d, Session session){
+        for (PlayerData p : d.getPlayers()) {
+            if(!exists(p, session)) {
+                session.persist(p);
+            }else{
+                Query<PlayerData> q = session.createQuery("from data.PlayerData t where t.battlefy_id = :key", PlayerData.class);
+                q.setParameter("key", p.getBattlefy_id());
+                List<PlayerData> ps = d.getPlayers();
+                ps.set(d.getPlayers().indexOf(p), q.uniqueResult());
+                d.setPlayers(ps);
+            }
         }
     }
 
@@ -122,10 +165,44 @@ public class Update implements Command {
         return (int) (topElo.doubleValue() + (50.0 * (s - e)));
     }
 
-    public boolean exists(TeamData t, Session s){
-        Query<Integer> query = s.
-                createQuery("select 1 from data.TeamData t where t.battlefy_id = :key", Integer.class);
+    public TeamData exists(TeamData t, Session s){
+        Query<TeamData> query = s.
+                createQuery("from data.TeamData t where t.battlefy_id = :key", TeamData.class);
         query.setParameter("key", t.getBattlefy_id());
+        if(query.uniqueResult() != null){
+            return query.uniqueResult();
+        }else{
+            Query<TeamData> allTeamsQuery = s.createQuery("from data.TeamData t", TeamData.class);
+            List<List<PlayerData>> playerListList = new ArrayList<>();
+            allTeamsQuery.list().forEach(p -> playerListList.add(p.getPlayers()));
+            List<PlayerData> res = new ArrayList<>();
+            for(List<PlayerData> pl: playerListList){
+                int buffer = 4 - pl.size();
+                for(PlayerData p: pl){
+                    boolean found = false;
+                    for(PlayerData p2: t.getPlayers()){
+                        if(p2.getBattlefy_id().equals(p.getBattlefy_id())){
+                            found = true;
+                            break;
+                        }
+                    }
+                    if(!found){
+                        buffer--;
+                    }
+                    if(buffer < 0){
+                        break;
+                    }
+                }
+            }
+
+            return t;
+        }
+    }
+
+    public boolean exists(PlayerData p, Session s){
+        Query<PlayerData> query = s.
+                createQuery("from data.PlayerData p where p.battlefy_id = :key", PlayerData.class);
+        query.setParameter("key", p.getBattlefy_id());
         return query.uniqueResult() != null;
     }
 

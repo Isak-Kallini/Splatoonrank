@@ -1,25 +1,43 @@
 package discordBot;
 
 import discordBot.commands.*;
-import jakarta.activation.CommandMap;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ClassInfoList;
+import io.github.classgraph.ScanResult;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
-import static discordBot.commands.Ranking.*;
 
 public class CommandHandler extends ListenerAdapter {
     static Map<String, Command> commandMap = new HashMap<>();
 
-    public static void init(){
-        commandMap.put("elo", new Elo());
-        commandMap.put("update", new Update());
-        commandMap.put("ranking", new Ranking());
+    public static void init(CommandListUpdateAction commands){
+        var classGraph = new ClassGraph().acceptPackages("discordBot.commands");
+        try(ScanResult result = classGraph.scan()){
+            ClassInfoList list = result.getSubclasses(Command.class);
+            List<Class<?>> classes = list.loadClasses();
+            classes.forEach(c -> {
+                    try {
+                        Command command = (Command) c.getDeclaredConstructor().newInstance();
+                        commandMap.put(command.getName(), command);
+                        commands.addCommands(
+                                Commands.slash(command.getName(), command.getDesc())
+                                        .addOptions(command.getOptions())
+                        );
+                    } catch (Exception e) {
+                        ErrorLogger.log(e);
+                    }
+            });
+        }
     }
+
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event){
         if (event.getGuild() == null)
@@ -48,7 +66,8 @@ public class CommandHandler extends ListenerAdapter {
     @Override
     public void onStringSelectInteraction(StringSelectInteractionEvent event){
         if(event.getComponentId().equals("teamEloCommand")){
-            ((Elo) commandMap.get("elo")).replyTeamStats(event, Integer.parseInt(event.getValues().get(event.getValues().size() - 1).split(" ")[0]), Main.factory.openSession());
+            List<String> eventValues = event.getValues();
+            ((Elo) commandMap.get("elo")).replyTeamStats(event, Integer.parseInt(eventValues.get(eventValues.size() - 1).split(" ")[0]), Main.factory.openSession());
         }
     }
 }

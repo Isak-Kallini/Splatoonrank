@@ -13,5 +13,6 @@
 
         <mapping class="data.TeamData"/>
         <mapping class="data.MatchData"/>
+        <mapping class="data.PlayerData"/>
     </session-factory>
 </hibernate-configuration>

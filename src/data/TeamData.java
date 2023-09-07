@@ -2,10 +2,13 @@ package data;
 
 import jakarta.persistence.*;
 
+import java.util.List;
+import java.util.Objects;
+
 @Entity
 @Table(name = "teams")
 public class TeamData {
-    @Column(name = "name", length = 5000)
+    @Column(name = "name", length = 100)
     private String name;
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -15,6 +18,13 @@ public class TeamData {
 
     @Column(name = "elo")
     private Integer elo;
+
+    @ElementCollection
+    @CollectionTable(name = "playerss", joinColumns = @JoinColumn(name = "id"))
+    @Column(name = "player")
+    private List<PlayerData> players;
+
+    private String ident;
 
     public TeamData(){}
 
@@ -44,5 +54,34 @@ public class TeamData {
 
     public Integer getId() {
         return id;
+    }
+
+    public List<PlayerData> getPlayers() {
+        return players;
+    }
+
+    public void setPlayers(List<PlayerData> players) {
+        this.players = players;
+    }
+
+    public String getIdent() {
+        return ident;
+    }
+
+    public void setIdent(String ident) {
+        this.ident = ident;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TeamData teamData = (TeamData) o;
+        return Objects.equals(id, teamData.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

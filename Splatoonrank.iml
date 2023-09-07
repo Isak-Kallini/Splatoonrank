@@ -15,5 +15,6 @@
     <orderEntry type="library" name="jfree.jfreechart" level="project" />
     <orderEntry type="library" name="net.dv8tion.JDA" level="project" />
     <orderEntry type="library" name="hibernate.core" level="project" />
+    <orderEntry type="library" name="io.github.classgraph" level="project" />
   </component>
 </module>
