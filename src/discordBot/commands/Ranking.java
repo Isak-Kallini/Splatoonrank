@@ -10,14 +10,12 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.List;
+import java.util.*;
 
 public class Ranking extends Command implements SelectEmbed {
     private List<TeamData> templist;
     private List<TeamData> list;
+    private List<Calendar> dates;
     private int current = 0;
     private final int viewCount = 10;
 
@@ -34,6 +32,7 @@ public class Ranking extends Command implements SelectEmbed {
         Query<TeamData> query = s.createQuery("from data.TeamData order by elo desc", TeamData.class);
         templist = query.list();
         list = new ArrayList<>();
+        dates = new ArrayList<>();
         for(TeamData t: templist){
             Query<Calendar> lastDate = s.createQuery("select MAX(date) FROM data.MatchData m WHERE m.top = :team OR m.bot = :team", Calendar.class);
             lastDate.setParameter("team", t);
@@ -42,6 +41,7 @@ public class Ranking extends Command implements SelectEmbed {
             long diff = currentCal.getTime().getTime() - lastMatch.getTimeInMillis();
             if(diff < 30L *3*24*60*60*1000){
                 list.add(t);
+                dates.add(lastMatch);
             }
         }
 
@@ -74,7 +74,9 @@ public class Ranking extends Command implements SelectEmbed {
                 dashes(nameMaxLength - 4) + "-----------\n" ;
         for(TeamData t: currentList){
             String name = t.getName();
-            result += "|" + name + spaces(nameMaxLength - name.length()) + "|" + t.getElo() + spaces(4 - t.getElo().toString().length()) + "|\n";
+            Calendar d = dates.get(list.indexOf(t));
+            result += "|" + name + spaces(nameMaxLength - name.length()) + "|" + t.getElo() + spaces(4 - t.getElo().toString().length()) + "|" +
+                    d.get(Calendar.DAY_OF_MONTH) + "/" + (d.get(Calendar.MONTH) + 1) + "/" + d.get(Calendar.YEAR) + "\n";
         }
         return result;
     }
