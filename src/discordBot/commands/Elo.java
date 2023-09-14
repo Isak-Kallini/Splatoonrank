@@ -43,7 +43,9 @@ public class Elo extends Command implements SelectEmbed {
     public void run(SlashCommandInteractionEvent event) {
         String name = event.getOption("team", null, OptionMapping::getAsString);
         Session s = Main.factory.openSession();
-        Query<TeamData> nameQuery = s.createQuery("from data.TeamData t where t.name like :name order by (select MAX(date) FROM data.MatchData m WHERE m.top = t OR m.bot = t) desc", TeamData.class);
+        Query<TeamData> nameQuery = s.createQuery("from data.TeamData t where t.name like :name order by (" +
+                "select MAX(date) FROM data.MatchData m WHERE m.top = t OR m.bot = t" +
+                ") desc", TeamData.class);
         nameQuery.setParameter("name", "%" + name + "%");
         List<TeamData> nameList = nameQuery.list();
         list = nameList;
@@ -152,24 +154,6 @@ public class Elo extends Command implements SelectEmbed {
 
         TeamData team = list.get(current + n - 1);
 
-        /*Query<MatchData> query = s.
-                createQuery("from data.MatchData t where t.top = :key", MatchData.class);
-        query.setParameter("key", team);
-        List<MatchData> topres = query.stream().toList();
-
-        Query<MatchData> query2 = s.
-                createQuery("from data.MatchData t where t.bot = :key", MatchData.class);
-        query2.setParameter("key", team);
-        List<MatchData> botres = query2.stream().toList();
-
-        TreeMap<Calendar, Integer> res = new TreeMap<>();
-        for (MatchData m : topres) {
-            res.put(m.getDate(), m.getTopElo());
-        }
-        for (MatchData m : botres) {
-            res.put(m.getDate(), m.getBotElo());
-        }*/
-
         Query<MatchData> matchDataQuery = s.createQuery("FROM data.MatchData t WHERE t.bot = :key OR t.top = :key", MatchData.class);
         matchDataQuery.setParameter("key", team);
         List<MatchData> queryRes = matchDataQuery.list();
@@ -204,13 +188,16 @@ public class Elo extends Command implements SelectEmbed {
                 losses++;
         }
 
+        Calendar lastMatch =  res.lastKey();
         MessageEmbed embed = new EmbedBuilder()
                 .setTitle(team.getName())
+                .setUrl("https://battlefy.com/teams/" + team.getBattlefy_id())
                 .setDescription("Current elo: " + team.getElo() + "\n" +
                         "Number of matches: " + data.size() + "\n" +
                         "Winrate: " + ((float) wins / (wins + losses)) + "\n" +
                         "Highest elo: " + Collections.max(data) + "\n" +
-                        "Lowest elo: " + Collections.min(data))
+                        "Lowest elo: " + Collections.min(data) + "\n" +
+                        "Last match: " + lastMatch.get(Calendar.DAY_OF_MONTH) + "/" + (lastMatch.get(Calendar.MONTH) + 1) + "/" + lastMatch.get(Calendar.YEAR))
                 .setImage("attachment://graph.png").build();
         event.replyEmbeds(embed).addFiles(FileUpload.fromData(file, "graph.png")).complete();
 
