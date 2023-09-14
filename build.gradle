@@ -1,0 +1,48 @@
+plugins {
+    id 'java'
+}
+
+apply plugin: 'application'
+
+mainClassName = 'Main'
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src']
+        }
+        resources {
+            srcDirs= ["src/resources"]
+        }
+    }
+}
+
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    // https://mvnrepository.com/artifact/commons-io/commons-io
+    implementation 'commons-io:commons-io:2.13.0'
+    // https://mvnrepository.com/artifact/org.hibernate/hibernate-core
+    implementation 'org.hibernate:hibernate-core:6.1.7.Final'
+    // https://mvnrepository.com/artifact/io.github.classgraph/classgraph
+    implementation 'io.github.classgraph:classgraph:4.8.162'
+    // https://mvnrepository.com/artifact/org.eclipse.persistence/javax.persistence
+    implementation 'org.eclipse.persistence:javax.persistence:2.2.1'
+    // https://mvnrepository.com/artifact/org.jfree/jfreechart
+    implementation 'org.jfree:jfreechart:1.5.4'
+    // https://mvnrepository.com/artifact/org.json/json
+    implementation 'org.json:json:20230618'
+    // https://mvnrepository.com/artifact/net.dv8tion/JDA
+    implementation 'net.dv8tion:JDA:5.0.0-beta.13'
+    // https://mvnrepository.com/artifact/com.mysql/mysql-connector-j
+    implementation 'com.mysql:mysql-connector-j:8.1.0'
+
+}
