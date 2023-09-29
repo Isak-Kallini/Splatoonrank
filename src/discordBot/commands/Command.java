@@ -10,7 +10,7 @@ public abstract class Command {
     protected String name;
     protected String desc;
     protected List<OptionData> options = new ArrayList<>();
-    public void run(SlashCommandInteractionEvent event) {}
+    public abstract void run(SlashCommandInteractionEvent event);
     public String getName() {
         return name;
     }
